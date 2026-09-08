@@ -1,0 +1,25 @@
+{
+	admin off
+	auto_https off
+}
+
+:{$PORT:80} {
+	root * /srv
+	encode zstd gzip
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Default: always revalidate (index.html, sw.js, manifest, icons)
+		Cache-Control "no-cache"
+	}
+
+	# Hashed build assets can be cached forever
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# SPA fallback for client-side routes
+	try_files {path} /index.html
+	file_server
+}

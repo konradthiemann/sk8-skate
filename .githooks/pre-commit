@@ -1,0 +1,15 @@
+#!/bin/sh
+# Runs lint, type check and tests before every commit.
+# Activate with: git config core.hooksPath .githooks  (or scripts/setup.sh)
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-commit: biome check"
+pnpm biome check
+
+echo "pre-commit: typecheck"
+pnpm typecheck
+
+echo "pre-commit: tests"
+pnpm test --run
