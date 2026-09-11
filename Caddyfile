@@ -11,13 +11,17 @@
 		-Server
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		# Default: always revalidate (index.html, sw.js, manifest, icons)
-		Cache-Control "no-cache"
 	}
 
-	# Hashed build assets can be cached forever
+	# Hashed build assets can be cached forever; everything else always revalidates
+	# (index.html, sw.js, manifest, icons). Caddy reorders same-named directives by
+	# its own directive priority, not Caddyfile order, so an unconditional
+	# "Cache-Control: no-cache" here would silently win over a later @assets override.
+	# Mutually exclusive matchers make the outcome independent of that ordering.
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
+	@not_assets not path /assets/*
+	header @not_assets Cache-Control "no-cache"
 
 	# SPA fallback for client-side routes
 	try_files {path} /index.html
