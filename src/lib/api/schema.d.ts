@@ -24,6 +24,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/skate-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List skate sessions
+         * @description Sessions newest first (sessionDate descending, then createdAt descending). Optionally filtered by date range.
+         */
+        get: operations["get_api_skate_sessions_list"];
+        put?: never;
+        /**
+         * Create a skate session
+         * @description Creates a session together with its practiced-trick rows.
+         */
+        post: operations["post_api_skate_sessions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skate-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one skate session
+         * @description Returns the session together with all of its practiced-trick rows.
+         */
+        get: operations["get_api_skate_sessions_get"];
+        /**
+         * Replace a skate session
+         * @description Replaces the session fields and reconciles the trick rows: a slug that stays keeps its row id, a new slug becomes a new row, a slug no longer present is deleted.
+         */
+        put: operations["put_api_skate_sessions_update"];
+        post?: never;
+        /**
+         * Delete a skate session
+         * @description Deletes the session and all of its practiced-trick rows (ON DELETE CASCADE).
+         */
+        delete: operations["delete_api_skate_sessions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/telemetry/events": {
         parameters: {
             query?: never;
@@ -38,6 +90,26 @@ export interface paths {
          * @description Accepts 1 to 100 events of one frontend session. Events are stored as-is; aggregation happens later in SQL.
          */
         post: operations["post_api_telemetry_events"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tricks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the trick catalog
+         * @description Returns all 16 tricks with their direct prerequisites, sorted by difficulty ascending and, on a tie, by name ascending.
+         */
+        get: operations["get_api_tricks_list"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -75,6 +147,112 @@ export interface components {
              */
             error: "validation_failed";
             violations: components["schemas"]["Violation"][];
+        };
+        SessionTrickInput: {
+            /**
+             * @description Slug of a catalog trick (T-0101)
+             * @example ollie
+             */
+            trickSlug: string;
+            /**
+             * @description Number of attempts, 1 to 999
+             * @example 30
+             */
+            attempts: number;
+            /**
+             * @description Number of landed attempts, 0 to attempts
+             * @example 21
+             */
+            landed: number;
+            /**
+             * @description Optional note for this trick row
+             * @default null
+             * @example Zu frueh aufgesetzt.
+             */
+            notes: string | null;
+        };
+        SkateSessionRequest: {
+            /**
+             * Format: date
+             * @description Session date, day precision
+             * @example 2026-09-06
+             */
+            sessionDate: string;
+            /**
+             * Format: date-time
+             * @description When the session started (ISO 8601 with offset)
+             * @example 2026-09-06T16:30:00+02:00
+             */
+            startedAt?: string | null;
+            /**
+             * @description Duration in minutes, 1 to 600
+             * @example 95
+             */
+            durationMinutes: number;
+            /**
+             * @description Where the session took place
+             * @example Skatepark Braunschweig
+             */
+            location: string;
+            /**
+             * Format: float
+             * @description Body weight before the session, in kg
+             * @default null
+             * @example 78.4
+             */
+            weightBeforeKg: number | null;
+            /**
+             * Format: float
+             * @description Body weight after the session, in kg; only allowed together with weightBeforeKg
+             * @default null
+             * @example 77.1
+             */
+            weightAfterKg: number | null;
+            /**
+             * @description Perceived exertion, 1 to 10
+             * @default null
+             * @example 7
+             */
+            perceivedExertion: number | null;
+            /**
+             * @description Knee pain, 0 to 10
+             * @default null
+             * @example 3
+             */
+            kneePain: number | null;
+            /**
+             * @description Free-form notes
+             * @default null
+             * @example Manuals liefen gut, Knie ab 60 Minuten spuerbar.
+             */
+            notes: string | null;
+            /**
+             * @description Practiced tricks, at most 50 rows; trickSlug must be unique within the list
+             * @default []
+             */
+            tricks: components["schemas"]["SessionTrickInput"][];
+        };
+        SkateSessionListQuery: {
+            /**
+             * Format: date
+             * @description Only sessions with sessionDate >= from
+             * @default null
+             * @example 2026-09-01
+             */
+            from: string | null;
+            /**
+             * Format: date
+             * @description Only sessions with sessionDate <= to
+             * @default null
+             * @example 2026-09-03
+             */
+            to: string | null;
+            /**
+             * @description Maximum number of items, 1 to 200
+             * @default 50
+             * @example 50
+             */
+            limit: number;
         };
         TelemetryEventInput: {
             /**
@@ -138,12 +316,258 @@ export interface components {
              */
             time: string;
         };
+        SkateSessionSummary: {
+            /**
+             * @description Session ID
+             * @example 01997d11-4c02-7a3e-8b55-2d9f10e4a7c1
+             */
+            id: string;
+            /**
+             * Format: date
+             * @description Session date, day precision
+             * @example 2026-09-06
+             */
+            sessionDate: string;
+            /**
+             * @description Duration in minutes
+             * @example 95
+             */
+            durationMinutes: number;
+            /**
+             * @description Where the session took place
+             * @example Skatepark Braunschweig
+             */
+            location: string;
+            /**
+             * @description Number of practiced-trick rows
+             * @example 2
+             */
+            trickCount: number;
+            /**
+             * @description Derived: sum of all tricks[].attempts, 0 without tricks
+             * @example 54
+             */
+            totalAttempts: number;
+            /**
+             * @description Derived: sum of all tricks[].landed
+             * @example 30
+             */
+            totalLanded: number;
+            /**
+             * Format: float
+             * @description Derived: totalLanded / totalAttempts, rounded to three decimals; null when totalAttempts is 0
+             * @example 0.556
+             */
+            successRate?: number | null;
+            /**
+             * Format: float
+             * @description Derived: weightBeforeKg - weightAfterKg, rounded to two decimals; null if either weight is missing
+             * @example 1.3
+             */
+            fluidLossKg?: number | null;
+            /**
+             * @description Perceived exertion, 1 to 10
+             * @example 7
+             */
+            perceivedExertion?: number | null;
+            /**
+             * @description Knee pain, 0 to 10
+             * @example 3
+             */
+            kneePain?: number | null;
+        };
+        SkateSessionListResponse: {
+            /** @description At most `limit` sessions, newest first */
+            items: components["schemas"]["SkateSessionSummary"][];
+            /**
+             * @description Total number of matches before limit was applied
+             * @example 5
+             */
+            total: number;
+        };
+        SessionTrickResponse: {
+            /**
+             * @description Trick row ID
+             * @example 01997d11-4c02-7a3e-8b55-2d9f10e4a7c2
+             */
+            id: string;
+            /**
+             * @description Slug of the practiced catalog trick
+             * @example ollie
+             */
+            trickSlug: string;
+            /**
+             * @description Catalog display name, spares a second lookup
+             * @example Ollie
+             */
+            trickName: string;
+            /**
+             * @description Number of attempts
+             * @example 30
+             */
+            attempts: number;
+            /**
+             * @description Number of landed attempts
+             * @example 21
+             */
+            landed: number;
+            /**
+             * Format: float
+             * @description landed / attempts, rounded to three decimals; never null since attempts >= 1
+             * @example 0.7
+             */
+            successRate: number;
+            /**
+             * @description Optional note for this trick row
+             * @example null
+             */
+            notes?: string | null;
+        };
+        SkateSessionResponse: {
+            /**
+             * @description Session ID
+             * @example 01997d11-4c02-7a3e-8b55-2d9f10e4a7c1
+             */
+            id: string;
+            /**
+             * Format: date
+             * @description Session date, day precision
+             * @example 2026-09-06
+             */
+            sessionDate: string;
+            /**
+             * Format: date-time
+             * @description When the session started (ISO 8601 with offset)
+             * @example 2026-09-06T14:30:00+00:00
+             */
+            startedAt?: string | null;
+            /**
+             * @description Duration in minutes
+             * @example 95
+             */
+            durationMinutes: number;
+            /**
+             * @description Where the session took place
+             * @example Skatepark Braunschweig
+             */
+            location: string;
+            /**
+             * Format: float
+             * @description Body weight before the session, in kg
+             * @example 78.4
+             */
+            weightBeforeKg?: number | null;
+            /**
+             * Format: float
+             * @description Body weight after the session, in kg
+             * @example 77.1
+             */
+            weightAfterKg?: number | null;
+            /**
+             * Format: float
+             * @description Derived: weightBeforeKg - weightAfterKg, rounded to two decimals; null if either weight is missing; may be negative
+             * @example 1.3
+             */
+            fluidLossKg?: number | null;
+            /**
+             * @description Perceived exertion, 1 to 10
+             * @example 7
+             */
+            perceivedExertion?: number | null;
+            /**
+             * @description Knee pain, 0 to 10
+             * @example 3
+             */
+            kneePain?: number | null;
+            /**
+             * @description Free-form notes
+             * @example Manuals liefen gut, Knie ab 60 Minuten spuerbar.
+             */
+            notes?: string | null;
+            /**
+             * Format: date-time
+             * @description When this session was created
+             * @example 2026-09-06T18:12:04+00:00
+             */
+            createdAt: string;
+            /** @description Practiced tricks, in the order they were added */
+            tricks: components["schemas"]["SessionTrickResponse"][];
+            /**
+             * @description Derived: sum of all tricks[].attempts, 0 without tricks
+             * @example 54
+             */
+            totalAttempts: number;
+            /**
+             * @description Derived: sum of all tricks[].landed
+             * @example 30
+             */
+            totalLanded: number;
+            /**
+             * Format: float
+             * @description Derived: totalLanded / totalAttempts, rounded to three decimals; null when totalAttempts is 0
+             * @example 0.556
+             */
+            successRate?: number | null;
+        };
         TelemetryAcceptedResponse: {
             /**
              * @description Number of events that were stored
              * @example 2
              */
             accepted: number;
+        };
+        TrickResponse: {
+            /**
+             * @description Trick ID
+             * @example 01997c6a-3b21-7c4e-9a10-4f2b6d8e1c35
+             */
+            id: string;
+            /**
+             * @description Unique, stable slug
+             * @example ollie
+             */
+            slug: string;
+            /**
+             * @description Display name (German)
+             * @example Ollie
+             */
+            name: string;
+            /**
+             * @description Movement category
+             * @example flat
+             */
+            category: string;
+            /**
+             * @description Position in the tree, 1 to 10
+             * @example 3
+             */
+            difficulty: number;
+            /**
+             * @description Optional description
+             * @example Ollie in der Fahrt. Ausgangsniveau etwa 25 cm, Zielhöhe darüber.
+             */
+            description?: string | null;
+            /**
+             * @description Whether this trick is one of the seven contest goals
+             * @example true
+             */
+            isGoal: boolean;
+            /**
+             * @description Position among the seven goals, 1 to 7
+             * @example 1
+             */
+            goalOrder?: number | null;
+            /**
+             * @description Slugs of the direct prerequisites, alphabetically sorted
+             * @example [
+             *       "ollie-stand"
+             *     ]
+             */
+            prerequisiteSlugs: string[];
+        };
+        TrickListResponse: {
+            /** @description The full trick catalog */
+            items: components["schemas"]["TrickResponse"][];
         };
     };
     responses: never;
@@ -176,6 +600,376 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    get_api_skate_sessions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Only sessions with sessionDate >= from
+                 * @example 2026-09-01
+                 */
+                from?: string | null;
+                /**
+                 * @description Only sessions with sessionDate <= to
+                 * @example 2026-09-03
+                 */
+                to?: string | null;
+                /**
+                 * @description Maximum number of items, 1 to 200
+                 * @example 50
+                 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "items": [
+                     *         {
+                     *           "id": "01997d11-4c02-7a3e-8b55-2d9f10e4a7c1",
+                     *           "sessionDate": "2026-09-06",
+                     *           "durationMinutes": 95,
+                     *           "location": "Skatepark Braunschweig",
+                     *           "trickCount": 2,
+                     *           "totalAttempts": 54,
+                     *           "totalLanded": 30,
+                     *           "successRate": 0.556,
+                     *           "fluidLossKg": 1.3,
+                     *           "perceivedExertion": 7,
+                     *           "kneePain": 3
+                     *         }
+                     *       ],
+                     *       "total": 1
+                     *     }
+                     */
+                    "application/json": components["schemas"]["SkateSessionListResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description limit outside 1-200, or from after to */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "validation_failed",
+                     *       "violations": [
+                     *         {
+                     *           "field": "from",
+                     *           "message": "Das Start-Datum darf nicht nach dem End-Datum liegen."
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    post_api_skate_sessions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "sessionDate": "2026-09-06",
+                 *       "startedAt": "2026-09-06T16:30:00+02:00",
+                 *       "durationMinutes": 95,
+                 *       "location": "Skatepark Braunschweig",
+                 *       "weightBeforeKg": 78.4,
+                 *       "weightAfterKg": 77.1,
+                 *       "perceivedExertion": 7,
+                 *       "kneePain": 3,
+                 *       "notes": "Manuals liefen gut, Knie ab 60 Minuten spuerbar.",
+                 *       "tricks": [
+                 *         {
+                 *           "trickSlug": "ollie",
+                 *           "attempts": 30,
+                 *           "landed": 21,
+                 *           "notes": null
+                 *         },
+                 *         {
+                 *           "trickSlug": "manual",
+                 *           "attempts": 24,
+                 *           "landed": 9,
+                 *           "notes": "Zu frueh aufgesetzt."
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["SkateSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Session created */
+            201: {
+                headers: {
+                    /** @description URL of the new session */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkateSessionResponse"];
+                };
+            };
+            /** @description Malformed JSON body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "bad_request"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Payload rejected by validation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "validation_failed",
+                     *       "violations": [
+                     *         {
+                     *           "field": "sessionDate",
+                     *           "message": "Das Datum darf nicht in der Zukunft liegen."
+                     *         },
+                     *         {
+                     *           "field": "tricks[0].landed",
+                     *           "message": "Es koennen nicht mehr Treffer als Versuche sein."
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    get_api_skate_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkateSessionResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unknown or formally invalid ID */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "not_found"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_api_skate_sessions_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkateSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Session updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkateSessionResponse"];
+                };
+            };
+            /** @description Malformed JSON body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "bad_request"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unknown ID */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "not_found"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Payload rejected by validation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_api_skate_sessions_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unknown ID */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "not_found"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -289,6 +1083,98 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    get_api_tricks_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The full trick catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "items": [
+                     *         {
+                     *           "id": "01997c6a-3b21-7c4e-9a10-4f2b6d8e1c30",
+                     *           "slug": "rolling",
+                     *           "name": "Sicher rollen",
+                     *           "category": "flat",
+                     *           "difficulty": 1,
+                     *           "description": "Pushen, Richtung halten, bremsen und in der Fahrt stehen.",
+                     *           "isGoal": false,
+                     *           "goalOrder": null,
+                     *           "prerequisiteSlugs": []
+                     *         },
+                     *         {
+                     *           "id": "01997c6a-3b21-7c4e-9a10-4f2b6d8e1c35",
+                     *           "slug": "ollie",
+                     *           "name": "Ollie",
+                     *           "category": "flat",
+                     *           "difficulty": 3,
+                     *           "description": "Ollie in der Fahrt. Ausgangsniveau etwa 25 cm, Zielhöhe darüber.",
+                     *           "isGoal": true,
+                     *           "goalOrder": 1,
+                     *           "prerequisiteSlugs": [
+                     *             "ollie-stand"
+                     *           ]
+                     *         },
+                     *         {
+                     *           "id": "01997c6a-3b21-7c4e-9a10-4f2b6d8e1c39",
+                     *           "slug": "ollie-to-manual",
+                     *           "name": "Ollie in den Manual",
+                     *           "category": "balance",
+                     *           "difficulty": 6,
+                     *           "description": "Ollie auf das Manual-Pad und direkt in den Manual abrollen.",
+                     *           "isGoal": true,
+                     *           "goalOrder": 4,
+                     *           "prerequisiteSlugs": [
+                     *             "manual",
+                     *             "ollie"
+                     *           ]
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TrickListResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Wrong HTTP method for this route */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "method_not_allowed"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
