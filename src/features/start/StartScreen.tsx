@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import type * as React from "react";
 import { sections } from "@/app.sections";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useNow } from "@/hooks/useNow";
@@ -9,7 +10,7 @@ import {
   formatContestDate,
 } from "@/lib/contest";
 
-export function StartScreen() {
+export function StartScreen({ children }: { children?: React.ReactNode }) {
   const now = useNow();
   const days = daysUntilContest(now);
 
@@ -33,6 +34,8 @@ export function StartScreen() {
           </CardContent>
         </Card>
       </section>
+
+      {children}
 
       <section aria-label="Bereiche" className="grid gap-3 sm:grid-cols-3">
         {sections.map(({ to, title, description, icon: Icon, track }) => (
