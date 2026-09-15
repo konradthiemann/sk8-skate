@@ -116,6 +116,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tricks/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one trick in detail
+         * @description Description, derived progress, direct prerequisites and unlocked tricks with their own status, and the full session history (newest first, up to 100 entries). Refreshes trick_progress from session_trick before responding, same as GET /api/trick-tree.
+         */
+        get: operations["get_api_trick_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trick-recommendation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the next trick(s) to focus on
+         * @description Up to focusLimit suggestions ranked by status, goalOrder, difficulty and slug, each with a German reasonCode and a recommended attempts/minutes dosage, plus an optional recovery hint for today.
+         */
+        get: operations["get_api_trick_recommendation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trick-tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the full trick tree
+         * @description Every trick with its derived status, session-derived numbers and prerequisite edges, plus the mastery policy thresholds. Refreshes trick_progress from session_trick before responding.
+         */
+        get: operations["get_api_trick_tree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -568,6 +628,356 @@ export interface components {
         TrickListResponse: {
             /** @description The full trick catalog */
             items: components["schemas"]["TrickResponse"][];
+        };
+        TrickDetailProgress: {
+            /**
+             * @description Derived progress status
+             * @example uebe
+             */
+            status: string;
+            /**
+             * @description Total attempts across all sessions
+             * @example 96
+             */
+            attemptsTotal: number;
+            /**
+             * @description Total landed attempts across all sessions
+             * @example 21
+             */
+            landedTotal: number;
+            /**
+             * Format: float
+             * @description landedTotal / attemptsTotal, three decimals; null when attemptsTotal is 0
+             * @example 0.219
+             */
+            successRate?: number | null;
+            /**
+             * Format: float
+             * @description Pooled success rate over the most recent qualifying sessions; null when none qualify
+             * @example 0.267
+             */
+            recentSuccessRate?: number | null;
+            /**
+             * @description Number of sessions this trick was practiced in
+             * @example 5
+             */
+            sessionCount: number;
+            /**
+             * Format: date
+             * @description Date of the first session with at least one landed attempt
+             * @example 2026-08-11
+             */
+            firstLandedOn?: string | null;
+            /**
+             * Format: date
+             * @description Date of the most recent practiced session
+             * @example 2026-09-06
+             */
+            lastPracticedOn?: string | null;
+            /**
+             * @description Server time this trick_progress row was last written, ISO 8601
+             * @example 2026-09-06T18:12:44+00:00
+             */
+            updatedAt: string;
+        };
+        TrickRefView: {
+            /**
+             * @description Public trick key, not the UUID
+             * @example ollie
+             */
+            slug: string;
+            /**
+             * @description Display name (German)
+             * @example Ollie
+             */
+            name: string;
+            /**
+             * @description Derived progress status
+             * @example sitzt
+             */
+            status: string;
+        };
+        TrickHistoryEntry: {
+            /**
+             * @description ID of the skate session this entry belongs to
+             * @example 0192f3a1-7c4e-7b21-9f0a-6d2c1b8e4a55
+             */
+            sessionId: string;
+            /**
+             * Format: date
+             * @description Date of the session
+             * @example 2026-09-06
+             */
+            sessionDate: string;
+            /**
+             * @description Attempts in this session
+             * @example 24
+             */
+            attempts: number;
+            /**
+             * @description Landed attempts in this session
+             * @example 7
+             */
+            landed: number;
+            /**
+             * Format: float
+             * @description landed / attempts, three decimals; null when attempts is 0
+             * @example 0.292
+             */
+            successRate?: number | null;
+            /**
+             * @description Optional free-text note for this trick within this session
+             * @example Rotation zu flach
+             */
+            notes?: string | null;
+        };
+        TrickPolicyView: {
+            /**
+             * Format: float
+             * @description Success rate from which a trick counts as mastered
+             * @example 0.75
+             */
+            masteryRate: number;
+            /**
+             * @description Number of most-recent qualifying sessions considered
+             * @example 3
+             */
+            masterySessions: number;
+            /**
+             * @description Minimum attempts a session needs before it qualifies
+             * @example 15
+             */
+            masteryMinAttempts: number;
+            /**
+             * @description each_session or pooled
+             * @example each_session
+             */
+            masteryMode: string;
+        };
+        TrickDetailResponse: {
+            /**
+             * @description Public trick key, not the UUID
+             * @example pop-shove-it
+             */
+            slug: string;
+            /**
+             * @description Display name (German)
+             * @example Pop Shove-it
+             */
+            name: string;
+            /**
+             * @description Movement category
+             * @example rotation
+             */
+            category: string;
+            /**
+             * @description Position in the tree, 1 to 10
+             * @example 3
+             */
+            difficulty: number;
+            /**
+             * @description Whether this trick is one of the seven contest goals
+             * @example true
+             */
+            isGoal: boolean;
+            /**
+             * @description Position among the seven goals, 1 to 7
+             * @example 2
+             */
+            goalOrder?: number | null;
+            /**
+             * @description Optional description
+             * @example Board dreht 180 Grad unter dir, Fuesse bleiben ueber dem Board.
+             */
+            description?: string | null;
+            progress: components["schemas"]["TrickDetailProgress"];
+            /** @description Direct prerequisites with their own status, sorted by difficulty then slug */
+            requires: components["schemas"]["TrickRefView"][];
+            /** @description Tricks this one directly unlocks, with their own status, sorted by difficulty then slug */
+            unlocks: components["schemas"]["TrickRefView"][];
+            /** @description Full session history, newest first, up to 100 entries */
+            history: components["schemas"]["TrickHistoryEntry"][];
+            policy: components["schemas"]["TrickPolicyView"];
+        };
+        TrickDosage: {
+            /**
+             * @description Minimum recommended attempts this session
+             * @example 15
+             */
+            attemptsMin: number;
+            /**
+             * @description Maximum recommended attempts this session
+             * @example 30
+             */
+            attemptsMax: number;
+            /**
+             * @description Minimum recommended minutes this session
+             * @example 10
+             */
+            minutesMin: number;
+            /**
+             * @description Maximum recommended minutes this session
+             * @example 20
+             */
+            minutesMax: number;
+        };
+        TrickSuggestion: {
+            /**
+             * @description Public trick key, not the UUID
+             * @example pop-shove-it
+             */
+            slug: string;
+            /**
+             * @description Display name (German)
+             * @example Pop Shove-it
+             */
+            name: string;
+            /**
+             * @description Derived progress status
+             * @example uebe
+             */
+            status: string;
+            /**
+             * @description Machine-readable reason code
+             * @example almost_landed
+             */
+            reasonCode: string;
+            /**
+             * @description German explanation for this suggestion
+             * @example Du landest diesen Trick schon öfter, aber die Erfolgsquote ist noch nicht über mehrere Einheiten stabil – bleib dran.
+             */
+            reason: string;
+            dosage: components["schemas"]["TrickDosage"];
+        };
+        PauseHintView: {
+            /**
+             * @description Machine-readable pause reason
+             * @example knee_pain
+             */
+            code: string;
+            /**
+             * @description German explanation for the pause hint
+             * @example Dein Knie meldet sich stärker als sonst – heute lieber kürzer treten oder pausieren, bei anhaltenden Schmerzen ärztlich abklären lassen.
+             */
+            message: string;
+        };
+        TrickRecommendationResponse: {
+            /** @description The single best next trick to focus on; null when no trick is currently practicing or ready */
+            primary?: components["schemas"]["TrickSuggestion"] | null;
+            /** @description Further suggestions - primary plus secondary never exceed focusLimit */
+            secondary: components["schemas"]["TrickSuggestion"][];
+            /**
+             * @description Maximum total number of suggestions (primary + secondary)
+             * @example 2
+             */
+            focusLimit: number;
+            /** @description Recovery hint for today; null when neither threshold is met */
+            pauseHint?: components["schemas"]["PauseHintView"] | null;
+            /**
+             * @description Server time of this response, ISO 8601
+             * @example 2026-09-08T17:41:02+00:00
+             */
+            generatedAt: string;
+        };
+        TrickTreeNode: {
+            /**
+             * @description Public trick key, not the UUID
+             * @example ollie
+             */
+            slug: string;
+            /**
+             * @description Display name (German)
+             * @example Ollie
+             */
+            name: string;
+            /**
+             * @description Movement category
+             * @example flat
+             */
+            category: string;
+            /**
+             * @description Position in the tree, 1 to 10
+             * @example 2
+             */
+            difficulty: number;
+            /**
+             * @description Whether this trick is one of the seven contest goals
+             * @example true
+             */
+            isGoal: boolean;
+            /**
+             * @description Position among the seven goals, 1 to 7
+             * @example 1
+             */
+            goalOrder?: number | null;
+            /**
+             * @description Derived progress status
+             * @example sitzt
+             */
+            status: string;
+            /**
+             * @description Total attempts across all sessions
+             * @example 412
+             */
+            attemptsTotal: number;
+            /**
+             * @description Total landed attempts across all sessions
+             * @example 318
+             */
+            landedTotal: number;
+            /**
+             * Format: float
+             * @description landedTotal / attemptsTotal, three decimals, via App\Service\Skate\SessionMetrics::successRate(); null when attemptsTotal is 0
+             * @example 0.772
+             */
+            successRate?: number | null;
+            /**
+             * Format: float
+             * @description Pooled success rate over the most recent qualifying sessions; null when none qualify
+             * @example 0.81
+             */
+            recentSuccessRate?: number | null;
+            /**
+             * @description Number of sessions this trick was practiced in
+             * @example 14
+             */
+            sessionCount: number;
+            /**
+             * Format: date
+             * @description Date of the first session with at least one landed attempt
+             * @example 2026-04-19
+             */
+            firstLandedOn?: string | null;
+            /**
+             * Format: date
+             * @description Date of the most recent practiced session
+             * @example 2026-09-06
+             */
+            lastPracticedOn?: string | null;
+        };
+        TrickTreeEdge: {
+            /**
+             * @description Slug of the prerequisite trick
+             * @example ollie-stand
+             */
+            from: string;
+            /**
+             * @description Slug of the dependent trick
+             * @example ollie
+             */
+            to: string;
+        };
+        TrickTreeResponse: {
+            /** @description All tricks, sorted by goalOrder ascending (null last), then difficulty, then slug */
+            nodes: components["schemas"]["TrickTreeNode"][];
+            /** @description One edge per prerequisite, from the prerequisite to the dependent trick, sorted by from then to */
+            edges: components["schemas"]["TrickTreeEdge"][];
+            policy: components["schemas"]["TrickPolicyView"];
+            /**
+             * @description Server time of this response, ISO 8601
+             * @example 2026-09-08T17:41:02+00:00
+             */
+            generatedAt: string;
         };
     };
     responses: never;
@@ -1147,6 +1557,333 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["TrickListResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Wrong HTTP method for this route */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "method_not_allowed"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_api_trick_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The trick detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "slug": "pop-shove-it",
+                     *       "name": "Pop Shove-it",
+                     *       "category": "rotation",
+                     *       "difficulty": 3,
+                     *       "isGoal": true,
+                     *       "goalOrder": 2,
+                     *       "description": "Board dreht 180 Grad unter dir, Fuesse bleiben ueber dem Board.",
+                     *       "progress": {
+                     *         "status": "uebe",
+                     *         "attemptsTotal": 96,
+                     *         "landedTotal": 21,
+                     *         "successRate": 0.219,
+                     *         "recentSuccessRate": 0.267,
+                     *         "sessionCount": 5,
+                     *         "firstLandedOn": "2026-08-11",
+                     *         "lastPracticedOn": "2026-09-06",
+                     *         "updatedAt": "2026-09-06T18:12:44+00:00"
+                     *       },
+                     *       "requires": [
+                     *         {
+                     *           "slug": "ollie",
+                     *           "name": "Ollie",
+                     *           "status": "sitzt"
+                     *         }
+                     *       ],
+                     *       "unlocks": [
+                     *         {
+                     *           "slug": "pop-shove-it-to-manual",
+                     *           "name": "Pop Shove-it in den Manual",
+                     *           "status": "gesperrt"
+                     *         }
+                     *       ],
+                     *       "history": [
+                     *         {
+                     *           "sessionId": "0192f3a1-7c4e-7b21-9f0a-6d2c1b8e4a55",
+                     *           "sessionDate": "2026-09-06",
+                     *           "attempts": 24,
+                     *           "landed": 7,
+                     *           "successRate": 0.292,
+                     *           "notes": "Rotation zu flach"
+                     *         },
+                     *         {
+                     *           "sessionId": "0192e88c-2b10-7a49-8f31-40c9b7e2d611",
+                     *           "sessionDate": "2026-09-02",
+                     *           "attempts": 20,
+                     *           "landed": 4,
+                     *           "successRate": 0.2,
+                     *           "notes": null
+                     *         }
+                     *       ],
+                     *       "policy": {
+                     *         "masteryRate": 0.75,
+                     *         "masterySessions": 3,
+                     *         "masteryMinAttempts": 15,
+                     *         "masteryMode": "each_session"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TrickDetailResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unknown or formally invalid slug */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "not_found"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Wrong HTTP method for this route */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "method_not_allowed"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_api_trick_recommendation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current recommendation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "primary": {
+                     *         "slug": "pop-shove-it",
+                     *         "name": "Pop Shove-it",
+                     *         "status": "uebe",
+                     *         "reasonCode": "almost_landed",
+                     *         "reason": "Du landest diesen Trick schon öfter, aber die Erfolgsquote ist noch nicht über mehrere Einheiten stabil – bleib dran.",
+                     *         "dosage": {
+                     *           "attemptsMin": 15,
+                     *           "attemptsMax": 30,
+                     *           "minutesMin": 10,
+                     *           "minutesMax": 20
+                     *         }
+                     *       },
+                     *       "secondary": [
+                     *         {
+                     *           "slug": "manual",
+                     *           "name": "Manual",
+                     *           "status": "uebe",
+                     *           "reasonCode": "consolidate",
+                     *           "reason": "Diesen Trick beherrschst du schon – übe ihn ab und zu weiter, damit er sitzen bleibt.",
+                     *           "dosage": {
+                     *             "attemptsMin": 15,
+                     *             "attemptsMax": 30,
+                     *             "minutesMin": 10,
+                     *             "minutesMax": 20
+                     *           }
+                     *         }
+                     *       ],
+                     *       "focusLimit": 2,
+                     *       "pauseHint": {
+                     *         "code": "knee_pain",
+                     *         "message": "Dein Knie meldet sich stärker als sonst – heute lieber kürzer treten oder pausieren, bei anhaltenden Schmerzen ärztlich abklären lassen."
+                     *       },
+                     *       "generatedAt": "2026-09-08T17:41:02+00:00"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TrickRecommendationResponse"];
+                };
+            };
+            /** @description Missing or invalid X-Api-Key header */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "unauthorized"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Wrong HTTP method for this route */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "method_not_allowed"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "internal_error"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_api_trick_tree: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The full trick tree */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "nodes": [
+                     *         {
+                     *           "slug": "ollie",
+                     *           "name": "Ollie",
+                     *           "category": "flat",
+                     *           "difficulty": 2,
+                     *           "isGoal": true,
+                     *           "goalOrder": 1,
+                     *           "status": "sitzt",
+                     *           "attemptsTotal": 412,
+                     *           "landedTotal": 318,
+                     *           "successRate": 0.772,
+                     *           "recentSuccessRate": 0.81,
+                     *           "sessionCount": 14,
+                     *           "firstLandedOn": "2026-04-19",
+                     *           "lastPracticedOn": "2026-09-06"
+                     *         },
+                     *         {
+                     *           "slug": "boardslide",
+                     *           "name": "Boardslide",
+                     *           "category": "slide",
+                     *           "difficulty": 6,
+                     *           "isGoal": true,
+                     *           "goalOrder": 6,
+                     *           "status": "gesperrt",
+                     *           "attemptsTotal": 0,
+                     *           "landedTotal": 0,
+                     *           "successRate": null,
+                     *           "recentSuccessRate": null,
+                     *           "sessionCount": 0,
+                     *           "firstLandedOn": null,
+                     *           "lastPracticedOn": null
+                     *         }
+                     *       ],
+                     *       "edges": [
+                     *         {
+                     *           "from": "ollie",
+                     *           "to": "pop-shove-it"
+                     *         },
+                     *         {
+                     *           "from": "ollie",
+                     *           "to": "boardslide"
+                     *         }
+                     *       ],
+                     *       "policy": {
+                     *         "masteryRate": 0.75,
+                     *         "masterySessions": 3,
+                     *         "masteryMinAttempts": 15,
+                     *         "masteryMode": "each_session"
+                     *       },
+                     *       "generatedAt": "2026-09-08T17:41:02+00:00"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TrickTreeResponse"];
                 };
             };
             /** @description Missing or invalid X-Api-Key header */

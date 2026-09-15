@@ -11,9 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrainingRouteImport } from './routes/training'
-import { Route as TricksRouteImport } from './routes/tricks'
 import { Route as SessionsIndexRouteImport } from './routes/sessions/index'
 import { Route as SessionsNewRouteImport } from './routes/sessions/new'
+import { Route as TricksIndexRouteImport } from './routes/tricks/index'
+import { Route as TricksSlugRouteImport } from './routes/tricks/$slug'
 import { Route as SessionsSessionIdIndexRouteImport } from './routes/sessions/$sessionId/index'
 import { Route as SessionsSessionIdEditRouteImport } from './routes/sessions/$sessionId/edit'
 
@@ -27,11 +28,6 @@ const TrainingRoute = TrainingRouteImport.update({
   path: '/training',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TricksRoute = TricksRouteImport.update({
-  id: '/tricks',
-  path: '/tricks',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SessionsIndexRoute = SessionsIndexRouteImport.update({
   id: '/sessions/',
   path: '/sessions/',
@@ -40,6 +36,16 @@ const SessionsIndexRoute = SessionsIndexRouteImport.update({
 const SessionsNewRoute = SessionsNewRouteImport.update({
   id: '/sessions/new',
   path: '/sessions/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TricksIndexRoute = TricksIndexRouteImport.update({
+  id: '/tricks/',
+  path: '/tricks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TricksSlugRoute = TricksSlugRouteImport.update({
+  id: '/tricks/$slug',
+  path: '/tricks/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionsSessionIdIndexRoute = SessionsSessionIdIndexRouteImport.update({
@@ -56,18 +62,20 @@ const SessionsSessionIdEditRoute = SessionsSessionIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/training': typeof TrainingRoute
-  '/tricks': typeof TricksRoute
   '/sessions/new': typeof SessionsNewRoute
+  '/tricks/$slug': typeof TricksSlugRoute
   '/sessions/': typeof SessionsIndexRoute
+  '/tricks/': typeof TricksIndexRoute
   '/sessions/$sessionId/edit': typeof SessionsSessionIdEditRoute
   '/sessions/$sessionId/': typeof SessionsSessionIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/training': typeof TrainingRoute
-  '/tricks': typeof TricksRoute
   '/sessions/new': typeof SessionsNewRoute
+  '/tricks/$slug': typeof TricksSlugRoute
   '/sessions': typeof SessionsIndexRoute
+  '/tricks': typeof TricksIndexRoute
   '/sessions/$sessionId/edit': typeof SessionsSessionIdEditRoute
   '/sessions/$sessionId': typeof SessionsSessionIdIndexRoute
 }
@@ -75,9 +83,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/training': typeof TrainingRoute
-  '/tricks': typeof TricksRoute
   '/sessions/new': typeof SessionsNewRoute
+  '/tricks/$slug': typeof TricksSlugRoute
   '/sessions/': typeof SessionsIndexRoute
+  '/tricks/': typeof TricksIndexRoute
   '/sessions/$sessionId/edit': typeof SessionsSessionIdEditRoute
   '/sessions/$sessionId/': typeof SessionsSessionIdIndexRoute
 }
@@ -86,27 +95,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/training'
-    | '/tricks'
     | '/sessions/new'
+    | '/tricks/$slug'
     | '/sessions/'
+    | '/tricks/'
     | '/sessions/$sessionId/edit'
     | '/sessions/$sessionId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/training'
-    | '/tricks'
     | '/sessions/new'
+    | '/tricks/$slug'
     | '/sessions'
+    | '/tricks'
     | '/sessions/$sessionId/edit'
     | '/sessions/$sessionId'
   id:
     | '__root__'
     | '/'
     | '/training'
-    | '/tricks'
     | '/sessions/new'
+    | '/tricks/$slug'
     | '/sessions/'
+    | '/tricks/'
     | '/sessions/$sessionId/edit'
     | '/sessions/$sessionId/'
   fileRoutesById: FileRoutesById
@@ -114,9 +126,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TrainingRoute: typeof TrainingRoute
-  TricksRoute: typeof TricksRoute
   SessionsNewRoute: typeof SessionsNewRoute
+  TricksSlugRoute: typeof TricksSlugRoute
   SessionsIndexRoute: typeof SessionsIndexRoute
+  TricksIndexRoute: typeof TricksIndexRoute
   SessionsSessionIdEditRoute: typeof SessionsSessionIdEditRoute
   SessionsSessionIdIndexRoute: typeof SessionsSessionIdIndexRoute
 }
@@ -137,13 +150,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrainingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tricks': {
-      id: '/tricks'
-      path: '/tricks'
-      fullPath: '/tricks'
-      preLoaderRoute: typeof TricksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sessions/': {
       id: '/sessions/'
       path: '/sessions'
@@ -156,6 +162,20 @@ declare module '@tanstack/react-router' {
       path: '/sessions/new'
       fullPath: '/sessions/new'
       preLoaderRoute: typeof SessionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tricks/': {
+      id: '/tricks/'
+      path: '/tricks'
+      fullPath: '/tricks/'
+      preLoaderRoute: typeof TricksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tricks/$slug': {
+      id: '/tricks/$slug'
+      path: '/tricks/$slug'
+      fullPath: '/tricks/$slug'
+      preLoaderRoute: typeof TricksSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sessions/$sessionId/': {
@@ -178,9 +198,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TrainingRoute: TrainingRoute,
-  TricksRoute: TricksRoute,
   SessionsNewRoute: SessionsNewRoute,
+  TricksSlugRoute: TricksSlugRoute,
   SessionsIndexRoute: SessionsIndexRoute,
+  TricksIndexRoute: TricksIndexRoute,
   SessionsSessionIdEditRoute: SessionsSessionIdEditRoute,
   SessionsSessionIdIndexRoute: SessionsSessionIdIndexRoute,
 }

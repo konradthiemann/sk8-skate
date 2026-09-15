@@ -1,9 +1,12 @@
 import { api } from "@/lib/api/client";
+import { ApiRequestError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 
 export type SkateSessionSummary = components["schemas"]["SkateSessionSummary"];
 export type SkateSessionResponse = components["schemas"]["SkateSessionResponse"];
 export type Violation = components["schemas"]["Violation"];
+
+export { ApiRequestError };
 
 export interface SessionListFilter {
   from?: string;
@@ -51,42 +54,6 @@ export const sessionKeys = {
   list: (filter: SessionListFilter) => ["sessions", "list", filter] as const,
   detail: (id: string) => ["sessions", "detail", id] as const,
 };
-
-/** Thrown by `fetchSessions`/`createSession` on any non-2xx response. */
-export class ApiRequestError extends Error {
-  readonly status: number;
-  readonly violations?: Violation[];
-
-  constructor(status: number, body: unknown) {
-    super(extractErrorCode(body));
-    this.name = "ApiRequestError";
-    this.status = status;
-    const violations = extractViolations(body);
-    if (violations !== undefined) {
-      this.violations = violations;
-    }
-  }
-}
-
-function extractErrorCode(body: unknown): string {
-  if (typeof body === "object" && body !== null && "error" in body) {
-    const value = (body as { error?: unknown }).error;
-    if (typeof value === "string") {
-      return value;
-    }
-  }
-  return "request_failed";
-}
-
-function extractViolations(body: unknown): Violation[] | undefined {
-  if (typeof body === "object" && body !== null && "violations" in body) {
-    const value = (body as { violations?: unknown }).violations;
-    if (Array.isArray(value)) {
-      return value as Violation[];
-    }
-  }
-  return undefined;
-}
 
 export async function fetchSessions(filter: SessionListFilter): Promise<SessionListResult> {
   const { data, error, response } = await api.GET("/api/skate-sessions", {
